@@ -1,127 +1,100 @@
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
--- Configuration
-local KEYBOARD_TITLE = "GOLDEN KEYBOARD"
-local GOLD_COLOR = Color3.fromRGB(255, 215, 0)
-local DARK_GOLD = Color3.fromRGB(139, 101, 8)
-local PRESSED_COLOR = Color3.fromRGB(255, 255, 255)
-local BG_COLOR = Color3.fromRGB(20, 20, 20)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DeltaKeyboardDisplay"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- UI Setup
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "GoldenKeyboardUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
--- Try to parent to CoreGui for executor compatibility, fallback to PlayerGui
-local success, err = pcall(function() ScreenGui.Parent = CoreGui end)
-if not success then ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") end
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 500, 0, 200)
-MainFrame.Position = UDim2.new(0.5, -250, 0.8, -100)
-MainFrame.BackgroundColor3 = BG_COLOR
-MainFrame.BorderSizePixel = 2
-MainFrame.BorderColor3 = GOLD_COLOR
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Thickness = 2
-UIStroke.Color = GOLD_COLOR
-UIStroke.Parent = MainFrame
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 25)
-Title.BackgroundTransparency = 1
-Title.Text = KEYBOARD_TITLE
-Title.TextColor3 = GOLD_COLOR
-Title.TextSize = 14
-Title.Font = Enum.Font.GothamBold
-Title.Parent = MainFrame
-
-local KeysContainer = Instance.new("Frame")
-KeysContainer.Size = UDim2.new(0.95, 0, 0.75, 0)
-KeysContainer.Position = UDim2.new(0.025, 0, 0.2, 0)
-KeysContainer.BackgroundTransparency = 1
-KeysContainer.Parent = MainFrame
-
-local UIGridLayout = Instance.new("UIGridLayout")
-UIGridLayout.CellSize = UDim2.new(0, 40, 0, 40)
-UIGridLayout.CellPadding = UDim2.new(0, 5, 0, 5)
-UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-UIGridLayout.Parent = KeysContainer
-
-local keyLabels = {}
-
--- Define keys to display
-local keysToShow = {
-    "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
-    "A", "S", "D", "F", "G", "H", "J", "K", "L",
-    "Shift", "Z", "X", "C", "V", "B", "N", "M", "Space"
-}
-
--- Create Key Visuals
-for _, keyName in ipairs(keysToShow) do
-    local KeyFrame = Instance.new("Frame")
-    KeyFrame.Name = keyName
-    KeyFrame.BackgroundColor3 = DARK_GOLD
-    KeyFrame.BorderSizePixel = 0
-    KeyFrame.Parent = KeysContainer
-    
-    local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 4)
-    UICorner.Parent = KeyFrame
-    
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, 0, 1, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = keyName == "Space" and "_" or keyName
-    Label.TextColor3 = GOLD_COLOR
-    Label.TextSize = 12
-    Label.Font = Enum.Font.GothamBold
-    Label.Parent = KeyFrame
-    
-    keyLabels[keyName:upper()] = KeyFrame
+-- Attempt to parent to CoreGui for Delta Executor, fallback to PlayerGui
+local success, err = pcall(function()
+    screenGui.Parent = CoreGui
+end)
+if not success then
+    screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Key Press Logic
-local function animateKey(keyName, pressed)
-    local frame = keyLabels[keyName:upper()]
-    if frame then
-        local targetColor = pressed and PRESSED_COLOR or DARK_GOLD
-        local targetText = pressed and BG_COLOR or GOLD_COLOR
-        
-        TweenService:Create(frame, TweenInfo.new(0.1), {BackgroundColor3 = targetColor}):Play()
-        TweenService:Create(frame.TextLabel, TweenInfo.new(0.1), {TextColor3 = targetText}):Play()
-    end
+local container = Instance.new("Frame")
+container.Name = "MainContainer"
+container.Size = UDim2.new(0, 200, 0, 50)
+container.Position = UDim2.new(0.5, -100, 0.85, 0) -- Positioned near the inventory/hotbar
+container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+container.BackgroundTransparency = 0.5
+container.BorderSizePixel = 0
+container.Parent = screenGui
+
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = container
+
+local uiListLayout = Instance.new("UIListLayout")
+uiListLayout.FillDirection = Enum.FillDirection.Horizontal
+uiListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+uiListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+uiListLayout.Padding = UDim.new(0, 5)
+uiListLayout.Parent = container
+
+local keys = {"W", "A", "S", "D"}
+local keyFrames = {}
+
+for _, keyName in ipairs(keys) do
+    local keyLabel = Instance.new("TextLabel")
+    keyLabel.Name = keyName
+    keyLabel.Size = UDim2.new(0, 40, 0, 40)
+    keyLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    keyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    keyLabel.Text = keyName
+    keyLabel.Font = Enum.Font.GothamBold
+    keyLabel.TextSize = 18
+    keyLabel.Parent = container
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = keyLabel
+    
+    keyFrames[Enum.KeyCode[keyName]] = keyLabel
 end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        local keyName = input.KeyCode.Name
-        if keyLabels[keyName:upper()] then
-            animateKey(keyName, true)
-        elseif input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
-            animateKey("Shift", true)
-        elseif input.KeyCode == Enum.KeyCode.Space then
-            animateKey("Space", true)
-        end
+    if keyFrames[input.KeyCode] then
+        keyFrames[input.KeyCode].BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        keyFrames[input.KeyCode].TextColor3 = Color3.fromRGB(0, 0, 0)
     end
 end)
 
 UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        local keyName = input.KeyCode.Name
-        if keyLabels[keyName:upper()] then
-            animateKey(keyName, false)
-        elseif input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
-            animateKey("Shift", false)
-        elseif input.KeyCode == Enum.KeyCode.Space then
-            animateKey("Space", false)
-        end
+    if keyFrames[input.KeyCode] then
+        keyFrames[input.KeyCode].BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        keyFrames[input.KeyCode].TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+-- Draggable functionality for the container
+local dragging, dragInput, dragStart, startPos
+
+container.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = container.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+container.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        container.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
